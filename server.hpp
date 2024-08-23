@@ -15,6 +15,7 @@
             int PORT;
             string IP;
             //vector<char> data;
+            struct sockaddr_in clientAddress;
 
             Server(){
                 (*this).fd =  socket(AF_INET,SOCK_STREAM,IPPROTO_TCP);
@@ -25,8 +26,14 @@
                 }
 
                 (*this).serverAddress.sin_family = AF_INET;
-            }
 
+                int opt = 1;
+
+                if (setsockopt((*this).fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt,sizeof(opt)) != 0){
+                    cout << "setsockopt failed." << endl;
+                    exit(-1);
+                }
+            }
             Server(int domain,int type,int protocol){
                 (*this).fd =  socket(domain,type,protocol);
 
@@ -36,16 +43,16 @@
                 }
 
                 (*this).serverAddress.sin_family = domain;
-            }
 
-            void listenTo(int n,function<void(Server&)> callback){
                 int opt = 1;
 
                 if (setsockopt((*this).fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt,sizeof(opt)) != 0){
                     cout << "setsockopt failed." << endl;
                     exit(-1);
                 }
+            }
 
+            void listenTo(int n,function<void(Server&)> callback){
                 (*this).serverAddress.sin_addr.s_addr = INADDR_ANY;
                 (*this).serverAddress.sin_port = htons((*this).PORT);
 
@@ -119,7 +126,6 @@
             int fd;
             int c_fd;
             struct sockaddr_in serverAddress;
-            struct sockaddr_in clientAddress;
             socklen_t addressSize;
             char buffer[1024];
     };
