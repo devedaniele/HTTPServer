@@ -11,8 +11,6 @@
 				"test/test.cpp",
 				"-o",
 				"test/test",
-				"&&",
-				"./test/test"
 			],
 			"options": {
 				"cwd": "${workspaceFolder}"

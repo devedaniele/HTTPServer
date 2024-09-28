@@ -14,24 +14,30 @@
             string version;
 
             string operator[](string header){
-                return (*this).headers[header];
+                return headers[header];
             }
             Request operator()(string header,string value){
-                (*this).headers[header] = value;
+                headers[header] = value;
 
                 return (*this);
             }
 
             Request parseType(string type,function<void(Request&)> callback){
-                (*this).types[type] = callback;
+                types[type] = callback;
 
                 return (*this);
             }
 
             string toString(){
-                return "hello world";
+                string result = method + " " + uri + " " + version;
+
+                return result;
             }
             Request fromString(string request){
+                method = "GET";
+                version = "HTTP/1.1";
+                uri = "/";
+
                 return (*this);
             }
 

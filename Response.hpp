@@ -32,27 +32,61 @@
             int status;
 
             string operator[](string header){
-                return (*this).headers[header];
+                return headers[header];
             }
             Response operator()(string header,string value){
-                (*this).headers[header] = value;
+                headers[header] = value;
 
                 return (*this);
             }
         
             void end(string msg){
+                const char* char_msg = msg.c_str();
+
+                body.reserve(msg.size());
+                (*this)("Content-Length",to_string(msg.size()));
+
+                if ((*this)["Content-Type"] == "")
+                    (*this)("Content-Type","text/html");
+
+                for (int i = 0;i < msg.size();i++)
+                    body.push_back(char_msg[i]);
             }
 
-            Response parseType(string type,function<void(Response&)> callback){
-                (*this).types[type] = callback;
+            Response parseType(string type,function<string(vector<char>&)> callback){
+                types[type] = callback;
 
                 return (*this);
             }
 
             string toString(){
-                (*this).types[(*this).headers["Content-Type"]]((*this));
+                string result = version + " " + to_string(status) + " " + STATUS[status];
 
-                return "\n\n";
+                map<string,string>::iterator it = headers.begin();
+
+                while(it != headers.end()){
+                    result += "\n" + it->first + ": " + it->second;
+
+                    ++it;
+                }
+
+                if (headers["Content-Type"] != ""){
+                    result += "\n\n";
+
+                    string conetnt_type = headers["Content-Type"];
+
+                    if (types[conetnt_type])
+                        result += types[conetnt_type](body);
+                    else{
+                        result += string(body.begin(),body.end());
+                    }
+                }else if(headers["Content-Length"] != ""){
+                    result += "\n\n";
+
+                    result += string(body.begin(),body.end());
+                }
+
+                return result;
             }
             Response fromString(string request){
                 return (*this);
@@ -60,7 +94,7 @@
 
         private:
             map<string,string> headers;
-            map<string,function<void(Response&)>> types;
+            map<string,function<string(vector<char>&)>> types;
             vector<char> body;
     };
 
